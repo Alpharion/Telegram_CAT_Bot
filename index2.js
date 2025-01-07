@@ -1,10 +1,10 @@
 const scraper = require('./scraper');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
-const app = express();
 const { Telegraf } = require('telegraf');
 const Telegram = require('telegraf/telegram');
 const express = require('express');
+const app = express();
 
 const telegram = new Telegram(process.env.BOT_TOKEN);
 const bot = new Telegraf(process.env.BOT_TOKEN);
