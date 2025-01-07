@@ -30,7 +30,7 @@ cron.schedule('*/1 * * * *', async () => {
 
     await scraper.scrapCAT(process.env.WEB_LOGIN_URL, page, isLoggedIn)
         .then((message) => {
-            if (message !== prevCAT && !message.includes('undefined')) {
+            if (!message.includes('undefined')) {
                 telegram
                     .sendMessage(process.env.CHANNEL_ID, message)
                     .then(() => {
