@@ -17,20 +17,17 @@ var isLoggedIn = false;
 // schedules a webscrape of the cat status webapage every 5 minutes
 // if new cat status is different from prev cat status, send a message to channel
 // prevCat only updated when a message has been sent
-cron.schedule('*/1 * * * *', async () => {
+cron.schedule('*/5 * * * *', async () => {
     // Debug
-    console.log("Test: Webscrape process starts!")
+    console.log("Webscrape process starts!")
     // End Debug
     if (!page) {
         page = await scraper.startBrowser();
     };
 
-    console.log("Telegram Channel ID: "+ process.env.CHANNEL_ID)
-    console.log("Telegram Bot Token: " + process.env.BOT_TOKEN)
-
     await scraper.scrapCAT(process.env.WEB_LOGIN_URL, page, isLoggedIn)
         .then((message) => {
-            if (!message.includes('undefined')) {
+            if (message !== prevCAT && !message.includes('undefined')) {
                 telegram
                     .sendMessage(process.env.CHANNEL_ID, message)
                     .then(() => {
