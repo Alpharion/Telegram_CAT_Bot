@@ -19,7 +19,7 @@ var isLoggedIn = false;
 // prevCat only updated when a message has been sent
 cron.schedule('*/5 * * * *', async () => {
     // Debug
-    console.log("Webscrape process starts!")
+    console.log("Test: Webscrape process starts!")
     // End Debug
     if (!page) {
         page = await scraper.startBrowser();
