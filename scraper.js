@@ -65,6 +65,8 @@ async function scrapCAT(url, page, isLoggedIn) {
 
     });
 
+    console.log([sector, CAT, validity])
+
 
     if (!sector || !CAT || !validity) {
         // items in sector or CAT or validity are undefined
