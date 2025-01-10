@@ -44,31 +44,36 @@ async function scrapCAT(url, page, isLoggedIn) {
     await page.goto(C.cat_url, { waitUntil: 'networkidle0', timeout: 0  });
     // await page.waitForSelector('table')
     // Get the cat 1 table results
+    let sector, CAT, validity;
+    try{
+
+           [sector, CAT, validity] = await page.evaluate(() => {
+            
+            var nodes = document.querySelectorAll('tr');
+            // nodes as of now, first sector is index [4], last sector is index [35]
+            var list = [];
+            // add all sectors into list, from index 4 aka first sector to index 35 aka last sector
+            for (var i = 4; i <= 35; i++) {
+                list.push(nodes[i]);
+            };
+            //if website loads too slow, might get cells of undefined error
+            if (list[0] && list.length == 32) { //total 32 sectors, only if list is exact 32 items
+                return [
+                    list.map(s => s.cells[0].innerHTML), // sector
+                    list.map(s => s.cells[1].innerHTML), // CAT status
+                    list.map(s => s.cells[2].innerHTML)  // validity
+                ];
+            };
+
+        });
+    } catch (error) {
+        throw new Error(`Error when scraping web data: ${error.message}`)
+    }
+
     
-    let [sector, CAT, validity] = await page.evaluate(() => {
-        
-        var nodes = document.querySelectorAll('tr');
-        // nodes as of now, first sector is index [4], last sector is index [35]
-        var list = [];
-        // add all sectors into list, from index 4 aka first sector to index 35 aka last sector
-        for (var i = 4; i <= 35; i++) {
-            list.push(nodes[i]);
-        };
-        //if website loads too slow, might get cells of undefined error
-        if (list[0] && list.length == 32) { //total 32 sectors, only if list is exact 32 items
-            return [
-                list.map(s => s.cells[0].innerHTML), // sector
-                list.map(s => s.cells[1].innerHTML), // CAT status
-                list.map(s => s.cells[2].innerHTML)  // validity
-            ];
-        };
-
-    });
-
-    console.log([sector, CAT, validity])
 
 
-    if (!sector || !CAT || !validity) {
+    if (!sector.length || !CAT.length || !validity.length) {
         // items in sector or CAT or validity are undefined
         throw new Error('website not loaded properly');
     }
@@ -91,7 +96,6 @@ async function scrapCAT(url, page, isLoggedIn) {
 
                     } else {
                         catGrouping[validity[i]] = sector[i] + ',';
-
                     };
                 };
             };
@@ -103,8 +107,6 @@ async function scrapCAT(url, page, isLoggedIn) {
     };
 
     return message;
-
-
 };
 
 async function scrapPSI(url, page, isLoggedIn) {

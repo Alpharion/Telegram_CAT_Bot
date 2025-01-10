@@ -55,11 +55,9 @@ cron.schedule('32 */1 * * *', async () => {
                     .then(console.log('psi reading was sent'))
                     .catch((err) => console.log(err.message));
             };
-
         })
         .catch((err) => console.log(err));
     isLoggedIn = true; // after one time login, set isLoggedIn to true so that scrapCAT does not run the login code again
-
 });
 
 const port = process.env.PORT || 3000;
