@@ -23,6 +23,11 @@ async function scrapCAT(url, page, isLoggedIn) {
 
     page.setViewport({ width: 1366, height: 1020 });
 
+    // Listen for console logs in the browser context of puppeteer
+    page.on('console', (msg) => {
+        console.log('Browser console:', msg.text());
+    })
+
     // If isLoggedIn is set to false, login and set isLoggedIn to True
     if (isLoggedIn == false) {
         // perform series of automation for login
@@ -42,14 +47,7 @@ async function scrapCAT(url, page, isLoggedIn) {
     // go to CAT 1 related URL upon logging in successfully
     // networkidle0: consider navigation to be finished when there are no more than 0 network connections for at least 500 ms. Solves reading cells of undefined
     await page.goto(C.cat_url, { waitUntil: 'networkidle0', timeout: 0  });
-    try {
-        await page.waitForFunction(
-            () => document.querySelectorAll('tr').length == 35,
-            {timeout: 5000} // 5 second timeout
-        );
-    } catch(error) {
-        console.log(`Timeout exceeded while waiting for <tr> elements, number of <tr> elements is ${document.querySelectorAll('tr').length}`)
-    };
+    await page.waitForSelector('tr', {timeout: 10000})
     // await page.waitForSelector('table')
     // Get the cat 1 table results
     let sector, CAT, validity;
