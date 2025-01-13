@@ -72,6 +72,7 @@ async function scrapCAT(url, page, isLoggedIn) {
                     list.map(s => s.cells[2].innerHTML)  // validity
                 ];
             };
+            console.clear();
 
         });
     } catch (error) {
