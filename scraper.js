@@ -42,6 +42,14 @@ async function scrapCAT(url, page, isLoggedIn) {
     // go to CAT 1 related URL upon logging in successfully
     // networkidle0: consider navigation to be finished when there are no more than 0 network connections for at least 500 ms. Solves reading cells of undefined
     await page.goto(C.cat_url, { waitUntil: 'networkidle0', timeout: 0  });
+    try {
+        await page.waitForFunction(
+            () => document.querySelectorAll('tr').length == 35,
+            {timeout: 5000} // 5 second timeout
+        );
+    } catch(error) {
+        console.log(`Timeout exceeded while waiting for <tr> elements, number of <tr> elements is ${document.querySelectorAll('tr').length}`)
+    };
     // await page.waitForSelector('table')
     // Get the cat 1 table results
     let sector, CAT, validity;
@@ -50,12 +58,14 @@ async function scrapCAT(url, page, isLoggedIn) {
            [sector, CAT, validity] = await page.evaluate(() => {
             
             var nodes = document.querySelectorAll('tr');
+            console.log(`NodeList length: ${nodes.length}`)
             // nodes as of now, first sector is index [4], last sector is index [35]
             var list = [];
             // add all sectors into list, from index 4 aka first sector to index 35 aka last sector
             for (var i = 4; i <= 35; i++) {
                 list.push(nodes[i]);
             };
+            console.log(`List length: ${list.length}`)
             //if website loads too slow, might get cells of undefined error
             if (list[0] && list.length == 32) { //total 32 sectors, only if list is exact 32 items
                 return [
