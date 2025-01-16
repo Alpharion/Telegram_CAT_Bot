@@ -13,7 +13,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 var prevCAT = '';
 var page;
-var isLoggedIn = false;
+var browser;
+
 // schedules a webscrape of the cat status webapage every 5 minutes
 // if new cat status is different from prev cat status, send a message to channel
 // prevCat only updated when a message has been sent
@@ -21,8 +22,11 @@ cron.schedule('*/5 * * * *', async () => {
     // Debug
     console.log("Webscrape process starts!")
     // End Debug
+    if (!browser) {
+        browser = await scraper.startBrowser();
+    }
     if (!page) {
-        page = await scraper.startBrowser();
+        page = await scraper.startPage(browser);
     };
 
     await scraper.scrapCAT(process.env.WEB_LOGIN_URL, page, isLoggedIn)
@@ -37,7 +41,6 @@ cron.schedule('*/5 * * * *', async () => {
             };
         })
         .catch((err) => console.log(err));
-    isLoggedIn = true; // after one time login, set isLoggedIn to true so that scrapCAT does not run the login code again
 
 });
 

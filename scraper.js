@@ -12,13 +12,19 @@ const CTA_SELECTOR = '#wp-submit';
 
 async function startBrowser() {
     const browser = await puppeteer.launch({ slowMo: 30, args: ['--no-sandbox','--headless', '--disable-gpu','--single-process','--no-zygote']}); //slowmo 30ms to ensure credentials are entered in a timely manner
+    return browser
+    const page = await browser.newPage();
+    return page;
+}
+
+async function startPage(browser) {
     const page = await browser.newPage();
     return page;
 }
 
 
 // core function to scrap CAT 1 details
-async function scrapCAT(url, page, isLoggedIn) {
+async function scrapCAT(url, page) {
     let message = `[CAT Status Update] ⚡\n`
 
     page.setViewport({ width: 1366, height: 1020 });
@@ -28,22 +34,20 @@ async function scrapCAT(url, page, isLoggedIn) {
         console.log('Browser console:', msg.text());
     })
 
-    // If isLoggedIn is set to false, login and set isLoggedIn to True
-    if (isLoggedIn == false) {
-        // perform series of automation for login
-        await page.goto(url, { waitUntil: 'networkidle0', timeout: 0 });
-        // line below added as a potential fix
-        // await page.waitForSelector(USERNAME_SELECTOR);
-        await page.click(USERNAME_SELECTOR);
-        await page.keyboard.type(C.username);
-        // line below added as a potential fix
-        //await page.waitForSelector(PASSWORD_SELECTOR);
-        await page.click(PASSWORD_SELECTOR);
-        await page.keyboard.type(C.password);
 
-        await page.click(CTA_SELECTOR);
+    // perform series of automation for login
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 0 });
+    // line below added as a potential fix
+    // await page.waitForSelector(USERNAME_SELECTOR);
+    await page.click(USERNAME_SELECTOR);
+    await page.keyboard.type(C.username);
+    // line below added as a potential fix
+    //await page.waitForSelector(PASSWORD_SELECTOR);
+    await page.click(PASSWORD_SELECTOR);
+    await page.keyboard.type(C.password);
 
-    }
+    await page.click(CTA_SELECTOR);
+
     // go to CAT 1 related URL upon logging in successfully
     // networkidle0: consider navigation to be finished when there are no more than 0 network connections for at least 500 ms. Solves reading cells of undefined
     await page.goto(C.cat_url, { waitUntil: 'networkidle0', timeout: 0  });
@@ -56,14 +60,14 @@ async function scrapCAT(url, page, isLoggedIn) {
            [sector, CAT, validity] = await page.evaluate(() => {
             
             var nodes = document.querySelectorAll('tr');
-            console.log(`NodeList length: ${nodes.length}`)
+
             // nodes as of now, first sector is index [4], last sector is index [35]
             var list = [];
             // add all sectors into list, from index 4 aka first sector to index 35 aka last sector
             for (var i = 4; i <= 35; i++) {
                 list.push(nodes[i]);
             };
-            console.log(`List length: ${list.length}`)
+
             //if website loads too slow, might get cells of undefined error
             if (list[0] && list.length == 32) { //total 32 sectors, only if list is exact 32 items
                 return [
@@ -72,14 +76,12 @@ async function scrapCAT(url, page, isLoggedIn) {
                     list.map(s => s.cells[2].innerHTML)  // validity
                 ];
             };
-            console.clear();
+            
 
         });
     } catch (error) {
         throw new Error(`Error when scraping web data: ${error.message}`)
     }
-
-    
 
 
     if (!sector.length || !CAT.length || !validity.length) {
@@ -114,6 +116,12 @@ async function scrapCAT(url, page, isLoggedIn) {
             };
         };
     };
+
+    
+    await page.close();
+    page = null; // mutating global page var to be Null
+    console.log("Page closed!")
+    console.log(page + " Should be null");
 
     return message;
 };
@@ -184,3 +192,4 @@ async function scrapPSI(url, page, isLoggedIn) {
 exports.scrapCAT = scrapCAT;
 exports.scrapPSI = scrapPSI;
 exports.startBrowser = startBrowser;
+exports.startPage = startPage;
