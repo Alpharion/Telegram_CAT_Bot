@@ -11,7 +11,7 @@ const CTA_SELECTOR = '#wp-submit';
 
 
 async function startBrowser() {
-    const browser = await puppeteer.launch({ slowMo: 30, args: ['--no-sandbox','--headless', '--disable-gpu','--single-process','--no-zygote']}); //slowmo 30ms to ensure credentials are entered in a timely manner
+    const browser = await puppeteer.launch({ slowMo: 30, args: ['--no-sandbox', '--headless', '--disable-gpu','--single-process','--no-zygote']}); //slowmo 30ms to ensure credentials are entered in a timely manner
     return browser
     const page = await browser.newPage();
     return page;
@@ -24,7 +24,7 @@ async function startPage(browser) {
 
 
 // core function to scrap CAT 1 details
-async function scrapCAT(url, page) {
+async function scrapCAT(url, page, isLoggedIn) {
     let message = `[CAT Status Update] ⚡\n`
 
     page.setViewport({ width: 1366, height: 1020 });
@@ -34,24 +34,25 @@ async function scrapCAT(url, page) {
         console.log('Browser console:', msg.text());
     })
 
+    if (! isLoggedIn) {
+        // perform series of automation for login
+        await page.goto(url, { waitUntil: 'networkidle0', timeout: 0 });
+        // line below added as a potential fix
+        // await page.waitForSelector(USERNAME_SELECTOR);
+        await page.click(USERNAME_SELECTOR);
+        await page.keyboard.type(C.username);
+        // line below added as a potential fix
+        //await page.waitForSelector(PASSWORD_SELECTOR);
+        await page.click(PASSWORD_SELECTOR);
+        await page.keyboard.type(C.password);
 
-    // perform series of automation for login
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 0 });
-    // line below added as a potential fix
-    // await page.waitForSelector(USERNAME_SELECTOR);
-    await page.click(USERNAME_SELECTOR);
-    await page.keyboard.type(C.username);
-    // line below added as a potential fix
-    //await page.waitForSelector(PASSWORD_SELECTOR);
-    await page.click(PASSWORD_SELECTOR);
-    await page.keyboard.type(C.password);
-
-    await page.click(CTA_SELECTOR);
+        await page.click(CTA_SELECTOR);
+    }
 
     // go to CAT 1 related URL upon logging in successfully
     // networkidle0: consider navigation to be finished when there are no more than 0 network connections for at least 500 ms. Solves reading cells of undefined
     await page.goto(C.cat_url, { waitUntil: 'networkidle0', timeout: 0  });
-    await page.waitForSelector('tr', {timeout: 10000})
+    //await page.waitForSelector('tr', {timeout: 10000})
     // await page.waitForSelector('table')
     // Get the cat 1 table results
     let sector, CAT, validity;
@@ -183,6 +184,11 @@ async function scrapPSI(url, page, isLoggedIn) {
     message += `West: ${psi[3]}\n`;
     message += `Central: ${psi[4]}\n`;
     message += `Overall: ${psi[5]}\n`;
+
+    await page.close();
+    page = null; // mutating global page var to be Null
+    console.log("Page closed!")
+    console.log(page + " Should be null");
 
     return [message, psi]
 

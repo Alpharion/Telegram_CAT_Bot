@@ -14,20 +14,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 var prevCAT = '';
 var page;
 var browser;
+var isLoggedIn = false;
 
 // schedules a webscrape of the cat status webapage every 5 minutes
 // if new cat status is different from prev cat status, send a message to channel
 // prevCat only updated when a message has been sent
-cron.schedule('*/5 * * * *', async () => {
+cron.schedule('*/1 * * * *', async () => {
     // Debug
     console.log("Webscrape process starts!")
     // End Debug
     if (!browser) {
         browser = await scraper.startBrowser();
     }
-    if (!page) {
-        page = await scraper.startPage(browser);
-    };
+
+    page = await scraper.startPage(browser);
+    console.log("New page for CAT started!")
 
     await scraper.scrapCAT(process.env.WEB_LOGIN_URL, page, isLoggedIn)
         .then((message) => {
@@ -41,15 +42,19 @@ cron.schedule('*/5 * * * *', async () => {
             };
         })
         .catch((err) => console.log(err));
+    isLoggedIn = true;
 
 });
 
 // schedules a websrape of the psi reading webpage every 32nd minute of every hour
 // 32m was chosen to give the website enough time to update for the hour as well as to not coincide with the 5 min cat webscrape
 cron.schedule('32 */1 * * *', async () => {
-    if (!page) {
-        page = await scraper.startBrowser();
-    };
+    if (!browser) {
+        browser = await scraper.startBrowser();
+    }
+
+    page = await scraper.startPage(browser);
+    console.log("New page for PSI started!")
     await scraper.scrapPSI(process.env.WEB_LOGIN_URL, page, isLoggedIn)
         .then(([message, psi]) => {
             if (process.env.RUN_PSI === 'yes' && psi.some(reading => parseInt(reading) > 100)) {
